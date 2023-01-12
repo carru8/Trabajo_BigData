@@ -1,0 +1,338 @@
+---
+title: "La Evolución del Cambio Climático"
+Emisiones_gases<- read.csv("datos/GETC.csv")
+View(Emisiones_gases)
+Emisiones_gases<- read.xlsx("datos/greenhouse.xlsx")
+library(readxl)
+Emisiones_gases<- read_excel("datos/greenhouse.xlsx")
+View(Emisiones_gases)
+Emisiones_gases<- read_excel("datos/greenhouse.xlsx")
+View(Emisiones_gases)
+Emisiones_gases<- read_excel("datos/greenhouse.xlsx")
+View(Emisiones_gases)
+filmaffinity <- read.csv("datos/filmaffinity_dataset.csv")
+View(filmaffinity)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9)
+library(tidyr)
+library(tidyverse)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9)
+View(film)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na()
+View(film)
+mejores_directores <- film%>% slice_max(Dirección, n=5)
+mejores_directores <- film%>% slice_max(Dirección, n=5)
+View(mejores_directores)
+mejores_notas <- film%>% slice_max(Nota, n=5)
+View(mejores_notas)
+mejores_notasi <- film %>% filter(Tipo.filme==Película)
+mejores_notasi <- film %>% filter(Tipo.filme==Pelicula)
+mejores_notasi <- film %>% filter(Tipo.filme=="Película")
+mejores_notasi <- film %>% filter(Tipo.filme=="Película") %>% slice_max(Nota, n=5)
+View(mejores_notasi)
+mejores_notasd <- film %>% filter(Tipo.filme=="Documental") %>% slice_max(Nota, n=5)
+View(mejores_notasi)
+View(mejores_notasd)
+mejores_notasC <- film %>% filter(Tipo.filme=="Cortometraje") %>% slice_max(Nota, n=5)
+View(mejores_notasC)
+mejores_notas %>%
+ggplot( aes(x=Año, y=mejores_notasi))+
+coord_flip() +labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "País", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=mejores_notasi))+
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "País", y='Nota')+theme_bw()
+plot1<- ggplot(film, aes(x=Año, y=mejores_notasi)) +
+geom_point() +
+theme_light()
+plot1
+plot1<- ggplot(film, aes(x=País, y=mejores_notasi)) +
+geom_point() +
+theme_light()
+plot1
+plot1<- ggplot(film, aes(x=film, y=mejores_notasi)) +
+geom_point() +
+theme_light()
+plot1
+plot1<- ggplot(film, aes(x=Año, y=Nota)) +
+geom_point() +
+theme_light()
+plot1
+plot1<- ggplot(mejores_notasi, aes(x=Año, y=Nota)) +
+geom_point() +
+theme_light()
+plot1
+plot1<- ggplot(mejores_notasi, aes(x=Pais, y=Nota)) +
+geom_point() +
+theme_light()
+plot1
+View(mejores_notasC)
+plot1<- ggplot(mejores_notasi, aes(x=País, y=Nota)) +
+geom_point() +
+theme_light()
+plot1
+plot1<- ggplot(film, aes(x=País, y=Nota)) +
+geom_point() +
+theme_light()
+plot1
+plot1<- ggplot(film, aes(x=País, y=Nota)) +
+geom_point() +
+theme_light()
+plot1
+plot1<- ggplot(data= mejores_notasi), aes(x=Año, y=Nota)) +
+plot1<- ggplot(data= mejores_notasi), aes(x=Año, y=Nota)) +
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "País", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Pais, y=Nota))+
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "País", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_point() +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_bar() +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_point(color="Género") +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_point(color=Género) +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_point(aes(color= Género)) +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_line(aes(color= Género)) +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_bar(aes(color= Género)) +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_point(aes(color= Género)) +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_point(aes(color= Género, )) +
+geom_line +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Datos obtenidos por Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_point(aes(color= Género)) +
+geom_line +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Datos obtenidos por Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+
+geom_point(aes(color= Género)) +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Datos obtenidos por Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notas %>%
+ggplot( aes(x=Año, y=Nota))+ geom_line() +
+geom_point(aes(color= Género)) +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Datos obtenidos por Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+mejores_notasi <- film %>% filter(Tipo.filme=="Película") %>% slice_max(Nota, n=5)
+film %>%
+ggplot( aes(x=Año, y=Nota))+ geom_line() +
+geom_point(aes(color= Género)) +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Datos obtenidos por Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+film %>%
+ggplot( aes(x=Año, y=Nota))+ geom_line() +
+geom_point() +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Datos obtenidos por Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na() %>% filter(Nota)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na() %>% group_by(Nota)
+View(film)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na() %>% filter(Año => 1990)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na() %>% filter(Año >= 1990)
+View(film)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na() %>% is.numeric(Nota)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na() %>% group_by(is.numeric(Nota))
+View(film)
+View(film)
+View(film)
+View(film)
+View(film)
+as.numeric(7)
+as.numeric()
+as.factor()
+as.factor(film)
+as.numeric(film)
+as.numeric(Nota)
+as.numeric("Nota")
+is.numeric("Nota")
+str(film)
+library(dplyr)
+film1 <- filmaffinity %>% select(-c("reparto"))
+film1 <- filmaffinity %>% select(-c("Reparto"))
+View(film1)
+film1 <- filmaffinity %>% select(-c("Reparto")) %>% as.numeric("Nota")
+nota <- as.numeric(Nota)
+nota <- as.numeric("Nota")
+nota <- as.numeric("Nota") %>% drop_na()
+isnumeric("Nota")
+is.numeric("Nota")
+class("Nota")
+film$Nota <- as.numeric(film$Nota)
+is.numeric("Nota")
+class(film$Nota)
+mejores_notas <- film%>% slice_max(Nota, n=5)
+mejores_notasi <- film %>% filter(Tipo.filme=="Película") %>% slice_max(Nota, n=5)
+mejores_notasd <- film %>% filter(Tipo.filme=="Documental") %>% slice_max(Nota, n=5)
+rm(list)
+View(mejores_directores)
+View(mejores_notasC)
+View(mejores_notasd)
+mejores_notasi <- film %>% filter(Tipo.filme=="Película") %>% slice_max(Nota, n=5)
+filmaffinity <- read.csv("datos/filmaffinity_dataset.csv")
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na() %>%
+mejores_notasi <- film %>% filter(Tipo.filme=="Película") %>% slice_max(Nota, n=5)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na()
+mejores_notasi <- film %>% filter(Tipo.filme=="Película") %>% slice_max(Nota, n=5)
+View(mejores_notasi)
+film %>%
+ggplot( aes(x=Año, y=Nota))+ geom_line() +
+geom_point() +
+labs(title='Las 5 mejores películas más puntuadas',
+caption='Datos obtenidos por Filmaffinity',
+x= "Año", y='Nota')+theme_bw()
+film$Nota <- as.numeric(film$Nota)
+class(film$Nota)
+mejores_notasi <- film %>% filter(Tipo.filme=="Película") %>% slice_max(Nota, n=10)
+View(mejores_notasi)
+mejores_notasi <- film %>% filter(Tipo.filme=="Película") %>% slice_max(Nota, n=5)
+View(mejores_notasi)
+peliculas <- film %>% group_by("Nota")
+View(peliculas)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na()
+View(film)
+film$Nota <- as.numeric(as.character(film$Nota))
+film$Nota
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na()
+film$Nota <- as.numeric(as.character(film$Nota))
+film$Nota
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% drop_na()
+peliculas <- film %>% group_by("Nota")
+View(peliculas)
+peliculas <- film %>% group_by(Nota)
+View(peliculas)
+film$Nota <- replace(',', '.')
+film$Nota <- replace( film$Nota, ',', '.')
+film(is.na(film)) <- 0
+film[is.na(film)] <- 0
+film <- filmaffinity %>% select(2,3,4,5,7,8,9)
+film[is.na(film)] <- 0
+View(film)
+film[is.na(film)] <- 0 #SUSTITUIMOS LOS NA POR 0
+film <- filmaffinity %>% select(2,3,4,5,7,8,9)
+film[is.na(film)] <- 0 #SUSTITUIMOS LOS NA POR 0
+view(film)
+View(film)
+View(film)
+film <- replace(film, "--" , "0")
+film <- replace(film$Nota, "--" , "0")
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% filter(Año >= 1995)
+View(film)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% filter(Año >= 2000)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% filter(Año >= 1950)
+View(filmaffinity)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% group_by(Año)
+View(film)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% arrange(Año)
+film <- replace(film$Nota, "--" , "0")
+film.drop(film[film['Nota'] == '--'].index, inplace = True)
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% arrange(Año)
+film.drop(film[film['Nota'] == '--'].index, inplace = True)
+film <- film %>%
+replace("Nota"; "--";"")
+film <- film %>%
+replace("Nota", "--","")
+film <- film %>%
+replace("Nota"; "--";"0")
+film <- film %>%
+replace("Nota", "--","0")
+film <- film %>%
+replace(Nota, --,0)
+film <- film %>%
+replace(film$Nota, "--", "0")
+film <- film %>%
+replace(film$Nota, "--", "NA")
+film <- film %>%
+replace(film$Nota, "--", "12")
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% arrange(Año) %>% filter(Año==!"--")
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% arrange(Año) %>% filter(Nota==!"--")
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% arrange(Año) %>% filter(!Nota=="--")
+View(film)
+film <- film %>%
+replace(film$Nota, ",", ".")
+filmaffinity <- read.csv("datos/filmaffinity_dataset.csv",dec=",", sep=".")
+library(readODS)
+film$Nota <- film$Nota(sub(",", ".", sub(".", "", var1, fixed=TRUE), fixed=TRUE))
+View(mejores_notasi)
+film$Nota <- film$Nota(sub(",", ".", sub(".", "", var1, fixed=TRUE), fixed=TRUE))
+filmaffinitydeci <- read.csv("datos/filmaffinity_dataset.csv",                 # Nombre del archivo o ruta completa del archivo
+header = TRUE,        # Leer el encabezado (TRUE) o no (FALSE)
+sep = ",",            # Separador de los valores
+quote = "\"",         # Caracter de citaciones
+dec = ".",            # Punto decimal
+fill = TRUE,          # Rellenar celdas vacías (TRUE) o no (FALSE)
+comment.char = "",    # Carácter de los comentarios o cadenas vacías
+encoding = "unknown", # Codificación del archivo
+...)
+filmaffinitydeci <- read.csv("datos/filmaffinity_dataset.csv",                 # Nombre del archivo o ruta completa del archivo
+header = TRUE,        # Leer el encabezado (TRUE) o no (FALSE)
+sep = ",",            # Separador de los valores
+quote = "\"",         # Caracter de citaciones
+dec = ".",            # Punto decimal
+fill = TRUE,          # Rellenar celdas vacías (TRUE) o no (FALSE)
+comment.char = "",    # Carácter de los comentarios o cadenas vacías
+encoding = "unknown")
+View(filmaffinity)
+View(filmaffinitydeci)
+film$Nota <- as.numeric(film$Nota)
+View(film)
