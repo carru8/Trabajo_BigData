@@ -1,0 +1,559 @@
+---
+title: "Análisis de la plataforma Filmaffinity"
+description: "En este trabajo realizaremos un análisis de la cantidad de tipos de cinematografía y las notas puntuadas por los usuarios de Filmaffinity "
+author: Naira Carruccio Villada (naicavi@alumni.uv.es)  #--
+date: 2023-01-11                  #--
+categories: [trabajo BigData, cine]   #--
+image: "./imagenes/imagen_01.png"
+title-block-banner: true #- {true, false, "green","#AA0000"}
+title-block-banner-color: "yellow"    #-"#FFFFFF" 
+toc: true
+toc-location: left
+toc-depth: 3
+smooth-scroll: true
+format: 
+  html:
+    #backgroundcolor: "#F1F3F4"
+    #standalone: true  
+    link-external-newwindow: true
+    #css: ./assets/my_css_file.css   #- CUIDADO!!!!
+code-tools: true
+code-link: true
+
+---
+### Códigos
+
+
+```{r}
+#| code-fold: true
+library(tidyr)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(plotly)
+library(ggplot2)
+library(scales)
+library(gganimate)
+library(wordcloud)
+library(sf)
+library(gt)
+filmaffinity <- read.csv("datos/filmaffinity_dataset.csv")
+film <- filmaffinity %>% select(2,3,4,5,7,8,9) %>% arrange(Año) %>% filter(!Nota=="--") %>% drop_na()
+film$Nota <- str_replace_all(film$Nota,",",".")
+film$Nota <- as.numeric(film$Nota)
+
+film1 <- film %>% dplyr::relocate(Nota,everything()) %>% filter(Tipo.filme == "Película") %>% arrange(desc(Nota))
+
+filmserie <- film %>% dplyr::relocate(Nota,everything()) %>% filter(Tipo.filme == "Serie") %>% arrange(desc(Nota))
+filmpelis<- film1 %>% 
+  mutate( Observación =  case_when(
+    Nota <= 5 ~ "No merece la pena ver",
+    Nota >= 8 ~ "Must watch",
+    Nota >= 6.5 ~ "Recomendable",
+    Nota >= 5 ~ "Pasable")) %>% select(Observación, everything())
+
+filmseries1<- filmserie %>% 
+  mutate( Observación =  case_when(
+    Nota <= 5 ~ "No merece la pena ver",
+    Nota >= 8 ~ "Must watch",
+    Nota >= 6.5 ~ "Recomendable",
+    Nota >= 5 ~ "Pasable")) %>% select(Observación, everything())
+
+```
+
+
+
+## Introducción
+
+Filmaffinity es un sitio web español dedicada al cine. Fue creado en 2002 y se basa en recomendar cine, con una base de datos donde se encuentra la ficha completa (técnica y artística) con una gran cantidad de películas, documentales, cortometrajes y series de televisión. 
+
+Cada tipo de cinematrografía recibe una puntuación calculada con la media de las puntuaciones recibidas por los usuarios. 
+
+Por ello, para los cinéfilos es una muy buena opción para compartir puntuaje y críticas.
+
+Aquí podemos ver, un tweet reciente de ellos, con su resumen del año 2022.
+
+
+```{r, echo = FALSE, out.width = "60%"}
+tweetrmd::tweet_embed("https://twitter.com/Filmaffinity/status/1609229938678431747", theme = "light", align = "center", dnt = TRUE, maxwidth = 400)
+```
+
+
+
+
+# Tipos de cinematografía
+
+
+
+```{r}
+#| code-fold: true
+tipos <- film %>% group_by(Tipo.filme) %>% summarise(count = n()) %>% filter(!(Tipo.filme=="Estreno televisivo")) %>%  ungroup() %>% 
+  mutate(porcentaje = `count` / sum(`count`)) %>% 
+  arrange(porcentaje) %>%
+  mutate(labels = scales::percent(porcentaje))
+
+tipospie <- ggplot(tipos, aes(x = "", y = porcentaje, fill = Tipo.filme)) +
+  geom_col() +
+  geom_text(aes(label = labels),
+            position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y")
+
+tipospie + ggtitle("Tipos de filme en Filmaffinity") 
+
+```
+
+Como podemos observar en el Pie chart, existen 5 tipos diferentes de cinematografía en Filmaffinity. Donde las películas se mantienen con el mayor porcentaje con un 65,5 % del contenido de la plataforma. A continuación, le siguen el cortometraje y las series con un gran diferencial porcentual. Y por último, encontramos a los documentales y las miniseries. Por tanto, es notable que Filmaffinity se decanta básicamente en base de datos de películas. 
+Además, estas bases de datos son clasificadas por Género, Países y la nota obtenida por la media de los usuarios. 
+
+
+
+
+# Clasificación por Géneros
+
+En la siguiente podemos observar, los géneros más repetidos por los tipos de cinematografía. Para ello, hemos realizado una observación de la cantidad de veces que se repiten los géneros. 
+
+::: {.panel-tabset}
+
+
+## Tabla
+```{r}
+#| code-fold: true
+
+# Tabla
+tipogg <- film %>% group_by(Género) %>% summarise(count = n()) %>%  ungroup() %>% 
+  mutate(porcentaje = `count` / sum(`count`)) %>% 
+  arrange(porcentaje) %>%
+  mutate(labels = scales::percent(porcentaje)) %>% slice_max(count, n=6) %>% select(1,2,4)
+
+
+tt_10 <- tipogg %>% gt()
+tt_10 <- gt::gt(tipogg)
+tt_10 <- tipogg%>% gt(rowname_col = "Género")
+tt_10 <- tt_10 %>% 
+  tab_header(title = "Los Géneros más repetidos" ) %>% 
+  cols_label(count = "Número", labels = "Porcentaje")  %>% cols_align(align = "center")%>% tab_source_note(md("Fuente: datos de Filmaffinity")) 
+tt_10 
+
+```
+
+
+
+## Gráfica
+
+```{r}
+#| code-fold: true
+tipogg %>% plot_ly (y = ~count, x= ~(Género), color = ~Género, type = "bar")
+```
+
+:::
+
+Los géneros más repetidos de una sola categoría son Drama, Documental, Comedia, Terror, Romance y Thriller.
+
+La categoría de *Drama* se define por aquel que representa algún episodio o conflicto de los seres humanos por medio del diálogo de los personajes. El  documental es definido por la expresión de un aspecto de la realidad.
+El género de *comedia* se relaciona con situaciones de humor que intenta provocar la risa de la audiencia. Sin embargo, el cine de *terror* se caracteriza por la voluntad de provocar en el espectador sensaciones de pavor, terror, miedo, disgusto,incomodidad o horror. Y el cine *romántico* con el retrato de la expresión del amor y las relaciones románticas. 
+
+Por último, el cine sobre *thriller* consiste en una narración de intriga y suspense. 
+
+
+Estas son las categorías con la que clasificaremos los tipos de cinematografía y las notas de los usuarios.
+
+Por ello, a continuación observaremos la producción de tipos de cinematografía con las diferentes categorías de géneros, en la siguiente gráfica de barras.
+
+### Producción de tipos de cinematografía 
+Producción de tipos de cinematogafía clasificados por los géneros puros más repetidos. 
+
+```{r}
+#| code-fold: true
+
+genero_count <- film  %>% filter(!(Tipo.filme =="Estreno televisivo")) %>% group_by(Tipo.filme) %>% count( Tipo.filme, Género) %>% mutate(porcentaje = `n` / sum(`n`)) %>% 
+  arrange(porcentaje)  %>%
+  mutate(Porcentaje = scales::percent(porcentaje))  %>% filter(Género %in% c("Drama", "Comedia", "Documental", "Terror", "Romance", "Thriller")) 
+
+
+plot2 <- ggplot(data = genero_count, aes (x=fct_rev(Género), y=porcentaje)) +
+  labs(title = "Producción de cine por géneros",
+       x = "Género",
+       y = "porcentaje",
+       color = "lightseagreen") +geom_line(size= 10, color= "lightseagreen")  
+
+plot2 + facet_grid("Tipo.filme") + geom_bar(stat="identity", color="lightseagreen", fill= "lightseagreen") + geom_label(aes(label=Porcentaje))
+
+
+```
+
+En esta gráfica, los  diferentes tipos de géneros explican el 43,83 % de las películas ya que el resto del porcentaje son películas con diversos géneros. En las películas el mayor porcentaje es el género de Drama En las series se dividen por un 30,94% en total sobre los géneros anteriormente citados, donde el de mayor porcentaje es la Comedia.Y en los cortometrajes, se explica el 31,85% y se destaca el género Documental. El género documental también destaca al 100 % explicando los documentales. Y finalmente, las miniseries se explican con un 39,56 % de géneros puros, de los cuales reaalta el Drama. 
+
+¿Pero la cantidad es igual a la calidad? ¿Si se producen más películas dramáticas que los otros géneros, las notas serán más altas?
+Para poder resolver esta duda, observaremos la evolución de las películas, ya que tiene el porcentaje más alto de los diferentes tipos de cinematografía. Para realizar esta observación, usaremos las notas de los usuarios de Filmaffinity, en una escala del 0-10 puntos. Donde consideraremos, que los puntajes por valor menor a 5, son películas negativamente puntuadas. 
+
+
+
+
+### Evaluación Películas 
+
+::: {.panel-tabset}
+
+# Gráfica
+
+```{r}
+#| code-fold: true
+filmpelis  %>% filter(Género %in% c("Drama", "Comedia", "Documental", "Terror", "Romance", "Thriller")) %>% filter(Año >= 1960) %>% ggplot(aes(x = Año , y = Nota)) +
+  geom_line(aes(group=Género, color=Género)) +
+  geom_smooth(aes(group=Género, color=Género)) +
+  facet_wrap(~Género) +
+  labs(title = "Evaluación de las películas según género desde 1960 hasta 2020 ",
+       caption = "Fuente: Elaboración propia con datos de Filmaffinity")
+
+```
+
+
+# Boxplot 
+
+```{r}
+#| code-fold: true
+filmpelis  %>% filter(Género %in% c("Drama", "Comedia", "Documental", "Terror", "Romance", "Thriller")) %>% filter(Año >= 1960) %>% plot_ly (y = ~Nota, color = ~Género, type = "box")
+
+
+```
+
+:::
+
+Se puede ver claramente que la puntuación de los diferentes géneros ha disminuido a lo largo de los años salvo la categoría de Romance donde tiende al 5. Es destacable que las películas de terror cada vez son peores. Ya que a partir de 1970, su línea de tendencia no entra en el rango del aprobado. Y es la única clasificación génerica con la línea de tendencia suspendida. El resto de géneros como la Comedia y el Thriller se mantienen al borde del aprobado. Y finalmente, el Drama empeora al paso de los años pero no tan latente como los otros géneros. 
+
+Al analizar el boxplot, observamos que el género con la nota máxima más alta es el dramático. Después, le sigue el Thriller, la Comedia, el Terror y finalmente el Romance. La nota mínima más baja, la tiene el género de Terror.
+
+En resumen, las películas drámaticas son el género más repetido y las mejores puntuadas pero el género menos repetido como el Romance no coincide con el género peor puntuado que es el Terror. 
+
+
+Siguiendo en la evaluación de las películas, ¿Cuáles son las películas mejores puntuadas por Género?
+
+::: {.panel-tabset}
+
+# Mejor película 
+
+```{r}
+#| code-fold: true
+
+nn <- filmpelis %>% 
+  filter(Nota >= 6) %>% 
+  filter(Género %in% c("Drama", "Comedia", "Documental", "Terror", "Romance", "Thriller")) %>% 
+  group_by(Género) %>% filter(!(Título == "Michael Jackson's Thriller (Vídeo musical)"))%>% arrange(desc(Nota)) %>% slice(1:5)
+
+
+nn%>% ggplot(aes(x=reorder(Título,+ Nota), y=Nota)) +
+  geom_col(aes(fill=Género), show.legend = FALSE) + coord_flip(y=c(6,9.5)) +
+  facet_wrap(~Género, scales = "free_y", ncol=2) +
+  labs(x="", y="") +
+  theme(axis.text.y = element_text(size=6)) +
+  labs(x = "Películas", y = "Puntaje", caption = "Datos obtenidos por Filmaffinity", title = "Las mejores películas por género", subtitle = "votos en Filmaffinity")
+
+
+```
+
+# Mejor director 
+```{r}
+#| code-fold: true
+nn%>% ggplot(aes(x=reorder(Dirección, Nota), y=Nota)) +
+  geom_col(aes(fill=Género), show.legend = FALSE) + coord_flip(y=c(6,9.5)) +
+  facet_wrap(~Género, scales = "free_y", ncol=2) +
+  labs(x="", y="") +
+  theme(axis.text.y = element_text(size=6))
+
+```
+
+:::
+
+Aquí podemos observar las mejores películas por Género, donde de una muestra de 25 películas a partir de un puntaje de 6, se han seleccionado 6 películas para los 5 diferentes géneros.
+
+En el género de Comedia, la mejor película es *Tiempos Modernos* y la segunda mejor *El Gran Dictador*, en Drama, la mejor película es *El Padrino* y la segunda mejor *El padrino. Parte II*. También podemos observar que en el género de Romance la película más destacable es *Después de la reconciliación* y la segunda más destacable *El peral*. En el género de Terror, la película que encabeza es *El Resplandor* y la segunda mejor *Los Pájaros*. Por último, en el Thriller la mejor película es *Pulp Fiction* y la segunda *Rififi*. 
+
+Además, es bastante interesante, la coincidencia de que dos de las mejores películas de comedia, son dirigidas por Charles Chaplin. Donde ocurre lo mismo con el drama, dirigidos por Francis Ford Coppola. Y que también la cuarta y quinta película clasificada en Thriller, sean dirigidas por John Huston. 
+
+
+Ya analizada la clasificación de género, estudiaremos la clasificación por País. 
+
+# Clasificación por País 
+
+# Mapa de la producción de cinematografía por País. 
+
+```{r}
+#| code-fold: true
+mapa <- film  %>% filter(!(Tipo.filme =="Estreno televisivo")) %>% group_by(País) %>% count(País,Tipo.filme,Año) %>% drop_na() %>% arrange (desc(n)) 
+
+library(tmap)
+data(World)
+class(World) #- es un sf, pero tb es un data.frame
+names(World) #- fijate que la ultima columna se llama geometry y almacena los datos espaciales
+
+#- fijate q el código de los paises esta en iso3c
+world_geo <- World %>% select(iso_a3, name, continent, life_exp, geometry)
+head(world_geo, n = 4)
+
+#- si necesitamos los nombres en castellano
+world_geo <- world_geo %>% 
+  mutate(name_esp = countrycode::countrycode(iso_a3, 
+                                             origin = "iso3c", 
+                                             destination = "cldr.name.es"), .after = iso_a3) 
+df1 <- inner_join(mapa, world_geo, by= c( "País" ="name_esp") ) 
+ 
+df2 <- df1 %>% filter(Año >= 1960) %>% drop_na()  %>% mutate(porcentaje = `n` / sum(`n`)) %>% 
+  arrange(porcentaje) %>%
+  mutate(percen2 = scales::percent(porcentaje))
+df2$n <- as.numeric(df2$n)
+
+mapa1 <- ggplot() + geom_sf(data = world_geo) +
+  geom_sf(data = df2, aes(geometry = geometry, fill = n)) +
+  theme_void()   +
+  scale_fill_distiller( palette = "Blues", trans = "reverse") +
+  transition_manual(Año) +
+  labs(title = "Cantidad de filmes producidos desde 1960 hasta 2020 {current_frame}",
+       caption = "Fuente: Elaboración propia con datos de Filmaffinity",
+       fill = "Unidades producidas") +
+  guides(fill = guide_colorbar(barheight = unit(5, "cm")))
+mapa1
+
+
+```
+
+
+Como podemos advertir en el mapa, Filmaffinity cuenta con cinematografía del todo el mundo pero a una cantidad relativamente baja por año. Sin embargo, Estados Unidos destaca por ser el país más productor en Cinematografía durante los años obtenidos e incrementa aún más su producción a partir de 2008, donde en 2016 llega a las cantidades más elevadas registradas en la plataforma. 
+
+De igual manera, se puede observar de un mejor modo, los países más productores sin tener en cuenta los años de cada realización cinematográfica. Veáse la siguiente tabla. 
+
+### Los países más productores 
+
+
+```{r}
+#| code-fold: true
+tipospaises <- film %>% group_by(País) %>% summarise(count = n()) %>%  ungroup() %>% 
+  mutate(porcentaje = `count` / sum(`count`)) %>% 
+  arrange(porcentaje) %>%
+  mutate(labels = scales::percent(porcentaje)) %>% slice_max(count, n=6)
+
+tt_9 <- tipospaises %>% gt()
+tt_9 <- gt::gt(tipospaises)
+tt_9 <- tipospaises %>% gt(rowname_col = "País")
+tt_9 <- tt_9 %>% 
+  tab_header(title = "Los países más productores de cine" ) %>% 
+  cols_label(count = "Número")  %>% cols_align(align = "center") 
+tt_9
+
+
+
+```
+
+
+Los principales países que producen más películas son Estados Unidos con una cantidad bastante elevada en comparación a los otros 5 países. Donde el resto de países son:
+- España
+- Reino Unidos
+- Francia
+- Japón 
+- Italia. 
+
+¿Pero cuánto producen por cada tipo de cinematografía?
+
+### Producción de tipos de cinematografía por País
+
+```{r}
+#| code-fold: true
+small3 <- film %>% filter(País %in% c("Estados Unidos", "España", "Reino Unido", "Francia", "Japón" ,"Italia")) %>% filter(!(Tipo.filme =="Estreno televisivo")) %>% group_by(Tipo.filme) %>% count(Tipo.filme, País) %>% mutate(porcentaje = `n` / sum(`n`)) %>%  arrange(porcentaje) %>%  mutate(Porcentaje = scales::percent(porcentaje))   
+
+
+
+plot1 <- ggplot(data = small3, aes(x=fct_rev(País), y=porcentaje)) +
+  labs(title = "Evolución de la producción de cine de los países más productores",
+       x = "País",
+       y = "porcentaje",
+       color = "lightseagreen") +geom_line(size= 10, color= "lightseagreen")  
+
+plot1 + facet_grid("Tipo.filme") + geom_bar(stat="identity", color="lightseagreen", fill= "lightseagreen")  + geom_label(aes(label=Porcentaje))
+
+
+```
+
+Como se puede ver en la gráfica, Estados Unidos es el país que más contribuye en todos los tipos de cinematografía. Y como segundo lugar varía dependiendo del tipo de filme, si es un cortometraje o un documental o una película, el segundo país más productor es España. Si es una miniserie, será Reino Unido. Y si es una serie, Japón. 
+
+
+```{r}
+#| code-fold: true
+tabla1<- filmpelis %>% 
+  group_by(País) %>% arrange(desc(Nota)) %>%
+  summarise(nota_media  = mean(Nota, na.rm = TRUE) ,
+            nota_minima = min(Nota, na.rm = TRUE)  ,
+            nota_maxima = max(Nota, na.rm = TRUE)  ,
+            nota_sd = sd(Nota, na.rm = TRUE) ) %>% 
+  ungroup() %>% drop_na() %>% filter(País %in% c("Estados Unidos", "España", "Reino Unido", "Francia", "Japón" ,"Italia")) %>% arrange(desc(nota_media))
+                                                                                                                                       
+tt_7 <- tabla1 %>% gt()
+tt_7 <- gt::gt(tabla1)
+tt_7 <- tabla1 %>% gt(rowname_col = "País") %>% 
+  tab_header(title = "Nota de las películas clasificadas por País" ) %>% 
+  cols_label(nota_maxima = "Max.",  nota_minima = "Min.", nota_sd ="SD")  %>% cols_label(nota_media = md("**Nota Media**")) %>% cols_align(align = "center") %>% 
+  cols_align(align = "left", columns = c("nota_media")) 
+tt_7
+
+
+
+```
+
+Se muestra que la peor nota máxima de los países más productores es Reino Unido y la mayor nota máxima de Estados Unidos. Y es clave, observar que aunque Estados Unidos sea el mayor productor de cine con diferencia, Japón tiene la mejor nota media. 
+
+Tras observar ambas clasificaciones, vamos a determinar unos aspectos apreciables para el análisis. 
+
+### Directores
+
+En primer lugar, hemos realizado una observación con los directores más repetidos a partir de una nota mayor que 8. 
+
+```{r}
+#| code-fold: true
+aa<- filmpelis %>% filter(Nota >=8) %>% group_by(Dirección) %>% summarise(count=length(Dirección)) %>% arrange(desc(count)) %>% slice_max(count,n=20)
+
+wordcloud(words=aa$Dirección,freq=aa$count,min.freq=20,max.words =50,random.order=FALSE,random.color=FALSE,rot.per=0.09,colors = brewer.pal(8,"Dark2"),scale=c(1,0.07))
+```
+
+Donde se pueden ver, directores bastante conocidos como Charles Chaplin, Alfred Hitchcock, Stanley Kubrick , Francis Ford Coppola y Martin Scorsese. 
+
+# Las mejores notas 
+
+
+::: {.panel-tabset}
+
+# Películas
+```{r}
+#| code-fold: true
+mejores_notaspelis <- filmpelis %>% filter(Tipo.filme=="Película")  %>% filter(!(Género== "Documental")) %>% slice_max(Nota, n=10)
+mejores_notaspelis %>%
+  slice(1:10)%>%
+  ggplot(., aes(reorder(Título, + Nota), Nota))+
+  coord_flip()+
+  geom_bar(stat = "identity", colour = "black", fill = rainbow(n=10, alpha = 0.9, start = 0.52, end = 0.56))+
+  labs(x = "Títulos de las películas", y = "Puntaje", caption = "Datos obtenidos por Filmaffinity", title = "Las películas más votadas", subtitle = "votos en Filmaffinity")+
+  geom_text(aes(label = sprintf("%.2f", Nota), y= Nota), position = position_stack(vjust = 0.5), size = 8)+
+  
+  theme(axis.title = element_text(size = 16), axis.text = element_text(size = 14, face = "bold"), axis.text.y = element_text(size = 12.2, face = "bold"), 
+        axis.line = element_line(size = 0.4, colour = "grey10"), plot.caption = element_text(color = "gray45", face = "italic", size = 11),
+        plot.subtitle = element_text(size = 17), plot.title = element_text(size = 20)) 
+
+
+```
+
+# Series
+
+```{r}
+#| code-fold: true
+mejores_notasseries <- filmseries1  %>% filter(Tipo.filme=="Serie") %>% filter(!(Género== "Documental")) %>% slice_max(Nota, n=10)
+mejores_notasseries %>%
+  slice(1:10)%>%
+  ggplot(., aes(reorder(Título, + Nota), Nota))+
+  coord_flip()+
+  geom_bar(stat = "identity", colour = "black", fill = rainbow(n=10, alpha = 0.9, start = 0.52, end = 0.56))+
+  labs(x = "Títulos de las series", y = "Puntaje", caption = "Datos obtenidos por Filmaffinity", title = "Las series más votadas", subtitle = "votos en Filmaffinity")+
+  geom_text(aes(label = sprintf("%.2f", Nota), y= Nota), position = position_stack(vjust = 0.5), size = 8)+
+  
+  theme(axis.title = element_text(size = 16), axis.text = element_text(size = 14, face = "bold"), axis.text.y = element_text(size = 12.2, face = "bold"), 
+        axis.line = element_line(size = 0.4, colour = "grey10"), plot.caption = element_text(color = "gray45", face = "italic", size = 11),
+        plot.subtitle = element_text(size = 17), plot.title = element_text(size = 20)) 
+
+
+```
+
+# Documentales
+
+```{r}
+#| code-fold: true
+mejores_notasdocumentales <-film  %>% filter(Tipo.filme=="Documental") %>% slice_max(Nota, n=10)
+
+mejores_notasdocumentales %>%
+  slice(1:10)%>%
+  ggplot(., aes(reorder(Título, + Nota), Nota))+
+  coord_flip()+
+  geom_bar(stat = "identity", colour = "black", fill = rainbow(n=10, alpha = 0.7, start = 0.52, end = 0.56))+
+  labs(x = "Títulos de los documentales", y = "Puntaje", caption = "Datos obtenidos por Filmaffinity", title = "Los documentales más votados", subtitle = "votos en Filmaffinity")+
+  geom_text(aes(label = sprintf("%.2f", Nota), y= Nota), position = position_stack(vjust = 0.3), size = 6)
+
+
+
+```
+
+
+:::
+
+
+Aunque previamente hayamos obtenidos las mejores películas por género, hemos obtenido las mejores películas sin ninguna clasificación. También las mejores series y documentales.
+Así que os recomiendo encarecidamente, que les echéis un vistazo ya que según los usuarios de la plataforma son un *MUST-WATCH*.
+
+# Conclusiones 
+Según los datos de Filmaffinity,el tipo de cinematografía donde hay más cantidad es la *Película*. Si observamos el género, el más repetido es el *Dramático*. La nota más alta, según el Género es el *Dramático* y la peor, el género de *Terror*. El país que realiza más cantidades de películas es *Estados Unidos* y la nota más alta según el país es *Japón*.
+La mejor película puntuada es *El Padrino*, la mejor serie *The Wire* y el mejor documental *Dream Theater*. 
+
+
+# Comentario
+
+Realizar el trabajo me ha gustado mucho ya que el cine es uno de mis grandes hobbies. Aunque al principio, me atasque un poco ya que en los datos usados, la Nota de los usuarios, no estaba como variable numérica pero finalmente lo logré convertir. Por tanto, con este trabajo se ha disfrutado tanto como se ha aprendido
+
+# Bibliografía
+
+[Kaggle Datos](https://www.kaggle.com/datasets/gan2gan/filmaffinity-dataset-spanish)
+
+[Kaggle](https://www.kaggle.com/code/erikbruin/movie-recommendation-systems-for-tmdb)
+
+
+[Filmaffinity Wikipedia](https://es.wikipedia.org/wiki/FilmAffinity)
+
+
+[Documental Wikipedia](https://es.wikipedia.org/wiki/Documental)
+
+[Comedia Wikipedia](https://es.wikipedia.org/wiki/Comedia_cinematogr%C3%A1fica)
+
+[Terror Wikipedia](https://es.wikipedia.org/wiki/Cine_de_terror)
+
+[Romance Wikipedia](https://es.wikipedia.org/wiki/Cine_rom%C3%A1ntico)
+
+
+
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+----------------------
+
+<br>
+
+### Información sobre la sesión
+
+Abajo muestro mi entorno de trabajo y paquetes utilizados
+
+```{r}
+#| echo: false
+sessioninfo::session_info() %>% 
+  details::details(summary = 'current session info') 
+
+library(tidyr)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(plotly)
+library(ggplot2)
+library(scales)
+library(gganimate)
+library(wordcloud)
+library(sf)
+library(gt)
+```
+
+
+
